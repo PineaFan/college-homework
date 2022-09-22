@@ -70,5 +70,6 @@ else:
     print("\033[91mYou are out of money")
     print("Game over")
     exit()
-print(f"You left with £{int_to_money(game.cash)}")
+
+print(f"You left with {int_to_money(game.cash)}")
 

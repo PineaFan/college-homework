@@ -38,18 +38,22 @@ class Machine:
                 return double_reward(roll[n])
         return 0
 
-    def play(self):
+    def play(self, auto: bool = False):
+        if auto:
+            roll = self._roll()
+            reward = self._reward(roll)
+            self.cash += reward - 20
+            return True
         print(f"\033[92mYou have {int_to_money(self.cash)}\033[0m")
         i = input("[Q]uit or [Enter] to play: ")
         if i.lower() == "q":
             return False
         self.cash -= 20
-        print("\n"*10)
+        print("\n"*50)
         print("Rolling...")
         roll = self._roll()
         reward = self._reward(roll)
         self.cash += reward
-
         time.sleep(1)
         print(f"You rolled {self.icons[roll[0]]} {self.icons[roll[1]]} {self.icons[roll[2]]}")
         if reward > 0:
@@ -62,14 +66,25 @@ class Machine:
         return True
 
 
-game = Machine()
-while game.cash > 0:
-    if not game.play():
-        break
-else:
-    print("\033[91mYou are out of money")
-    print("Game over")
-    exit()
+auto = True
+played = 0
+total_rounds = 0
+while True:
+    game = Machine()
+    rounds = 0
+    while game.cash > 0:
+        rounds += 1
+        if not game.play(auto):
+            break
+    else:
+        if not auto:
+            print("\033[91mYou are out of money.")
+            print(f"Game over after {rounds} rounds.")
+    if not auto:
+        print(f"You left with {int_to_money(game.cash)}")
+    played += 1
+    total_rounds += rounds
+    if total_rounds % 10000 == 0:
+        print(f"Played {played} games with {total_rounds} rounds, average {total_rounds/played} rounds per game")
 
-print(f"You left with {int_to_money(game.cash)}")
 

@@ -1,5 +1,7 @@
 import random
 import time
+from matplotlib import pyplot
+import json
 
 
 def int_to_money(amount):
@@ -66,25 +68,82 @@ class Machine:
         return True
 
 
-auto = True
-played = 0
-total_rounds = 0
-while True:
+def controlled():
+    played = 0
+    total_rounds = 0
+    while True:
+        game = Machine()
+        rounds = 0
+        while game.cash > 0:
+            rounds += 1
+            if not game.play():
+                break
+        else:
+            print("\033[91mYou are out of money.")
+        print(f"You left with {int_to_money(game.cash)}")
+        played += 1
+        total_rounds += rounds
+        if total_rounds % 10000 == 0:
+            print(f"Played {played} games with {total_rounds} rounds, average {total_rounds/played} rounds per game")
+
+
+def auto() -> int:
     game = Machine()
     rounds = 0
     while game.cash > 0:
         rounds += 1
-        if not game.play(auto):
+        if not game.play(auto=True):
             break
-    else:
-        if not auto:
-            print("\033[91mYou are out of money.")
-            print(f"Game over after {rounds} rounds.")
-    if not auto:
-        print(f"You left with {int_to_money(game.cash)}")
-    played += 1
-    total_rounds += rounds
-    if total_rounds % 10000 == 0:
-        print(f"Played {played} games with {total_rounds} rounds, average {total_rounds/played} rounds per game")
+    return rounds
 
 
+def generateGraph(plot, report):
+    # Generates a graph which updates every time a game is played
+    # The bar graph shows the counts of each game length
+    lengths = {}
+    if plot:
+        plt = pyplot
+        plt.ion()
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
+        ax.set_xlabel("Rounds")
+        ax.set_ylabel("Games")
+        ax.set_title("Slot Machine")
+        ax.set_xlim(0, 100)
+        ax.set_ylim(0, 100)
+        ax.grid()
+
+    count = 0
+    while True:
+        length = auto()
+        if length in lengths:
+            lengths[length] += 1
+        else:
+            lengths[length] = 1
+        count += 1
+
+        if count % 10000 == 0:
+            if report:
+                with open("lengths.json", "w") as f:
+                    json.dump(dict(sorted(lengths.items())), f, indent=4)
+            if plot:
+                ax.clear()
+                ax.set_xlim(0, max(lengths.keys()) + 10)
+                ax.set_ylim(0, max(lengths.values()) + 10)
+                ax.grid()
+                ax.bar(lengths.keys(), lengths.values(), width=1, align="edge")
+
+                ax.text(0.5, 0.9, f"Simulations: {count}", transform=ax.transAxes)
+                ax.text(0.5, 0.85, f"Mean: {sum([a * b for a, b in lengths.items()]) / sum(lengths.values())}", transform=ax.transAxes)
+                ax.text(0.5, 0.8, f"Mode: {lengths[max(lengths, key=lengths.get)]}", transform=ax.transAxes)
+                ax.text(0.5, 0.75, f"Max: {max(lengths.keys())}", transform=ax.transAxes)
+
+                x = list(range(1, max(lengths.keys()) + 1))
+                y = [(a ** -1.5) * count for a in x]
+                ax.plot(x, y, color="red")
+
+                fig.canvas.draw()
+                fig.canvas.flush_events()
+
+# generateGraph(True, False)
+controlled()

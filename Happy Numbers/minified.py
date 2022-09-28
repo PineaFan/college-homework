@@ -1,1 +1,1 @@
-for n in range(0, 101): print((lambda n: (f"{n}: {'Happy' if 1 in [n] + [n := sum(int(i)**2 for i in list(str(n))) for _ in range(0, 8 + 1)] else 'Unhappy'}"))(n))
+for n in range(31):print((lambda n:f"{n}{'H'if 1 in [n]+[n:=sum(int(i)**2 for i in list(str(n)))for _ in range(n+1)]else'U'}")(n))
